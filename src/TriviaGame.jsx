@@ -21,6 +21,8 @@ export default function TriviaGame() {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [scores, setScores] = useState({});
   const [answers, setAnswers] = useState({});
+  const [showCorrect, setShowCorrect] = useState(false);
+  const [countdown, setCountdown] = useState(null);
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -38,11 +40,32 @@ export default function TriviaGame() {
       setQuestion(newQ);
       setSelectedAnswer(null);
       setAnswers({});
+      setShowCorrect(false);
+      setCountdown(null);
     });
+
     socket.on("answerSubmitted", (data) => {
-      setAnswers((prev) => ({ ...prev, [data.player]: data.answer }));
+      setAnswers((prev) => {
+        const updated = { ...prev, [data.player]: data.answer };
+        if (Object.keys(updated).length === players.length) {
+          setShowCorrect(true);
+          let seconds = 3;
+          setCountdown(seconds);
+          const interval = setInterval(() => {
+            seconds -= 1;
+            if (seconds === 0) {
+              clearInterval(interval);
+              setCountdown(null);
+              socket.emit("getQuestion");
+            } else {
+              setCountdown(seconds);
+            }
+          }, 1000);
+        }
+        return updated;
+      });
     });
-  }, []);
+  }, [players.length]);
 
   const submitAnswer = (option) => {
     if (!selectedAnswer) {
@@ -67,11 +90,22 @@ export default function TriviaGame() {
                 key={option}
                 onClick={() => submitAnswer(option)}
                 disabled={!!selectedAnswer}
+                className={`${
+                  showCorrect && option === question.answer ? "bg-green-500" : ""
+                }`}
               >
                 {option}
               </Button>
             ))}
           </div>
+          {showCorrect && (
+            <p className="mt-4 text-green-600 font-semibold">
+              ✅ Correct Answer: {question.answer}
+            </p>
+          )}
+          {countdown !== null && (
+            <p className="mt-2 text-sm text-gray-500">Next question in {countdown}...</p>
+          )}
         </CardContent>
       </Card>
       <div className="mb-4">
