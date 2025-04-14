@@ -103,18 +103,19 @@ export default function TriviaGame() {
         <CardContent>
           <p className="text-lg font-semibold mb-2">{question.question}</p>
           <div className="grid grid-cols-2 gap-2">
-            {question.options.map((option) => (
-              <Button
-                key={option}
-                onClick={() => submitAnswer(option)}
-                disabled={!!selectedAnswer}
-                className={`${
-                  showCorrect && option === question.answer ? "bg-green-500" : ""
-                }`}
-              >
-                {option}
-              </Button>
-            ))}
+            {question.options.map((option) => {
+              const highlight = showCorrect && option === question.answer ? "bg-green-500" : "";
+              return (
+                <Button
+                  key={option}
+                  onClick={() => submitAnswer(option)}
+                  disabled={!!selectedAnswer}
+                  className={highlight}
+                >
+                  {option}
+                </Button>
+              );
+            })}
           </div>
           {showCorrect && (
             <p className="mt-4 text-green-600 font-semibold">
