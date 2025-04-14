@@ -13,7 +13,7 @@ const Button = ({ children, className = "", ...props }) => (
 );
 
 const Card = ({ children }) => (
-  <div className="bg-white rounded-2xl shadow-lg p-8 mb-6 border border-gray-200 flex flex-col items-center text-center w-full max-w-2xl">{children}</div>
+  <div className="bg-white rounded-2xl shadow-lg p-8 mb-6 border border-gray-200 flex flex-col items-center text-center w-full max-w-2xl mx-auto">{children}</div>
 );
 
 const CardContent = ({ children }) => <div className="w-full">{children}</div>;
@@ -146,9 +146,9 @@ export default function TriviaGame() {
         <CardContent>
           <p className="text-2xl font-semibold mb-4 text-gray-800">{question.question}</p>
           <p className="text-base text-gray-500 mb-2">⏳ Time left: {questionTimer}s</p>
-          <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden mb-6">
+          <div className="w-full h-4 bg-gray-300 rounded-full overflow-hidden mb-6">
             <div
-              className="h-full bg-indigo-500 transition-all duration-500 ease-linear"
+              className="h-full bg-indigo-500 transition-all duration-1000 ease-linear"
               style={{ width: `${progressPercentage}%` }}
             ></div>
           </div>
