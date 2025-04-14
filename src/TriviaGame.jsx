@@ -3,8 +3,11 @@ import { io } from "socket.io-client";
 
 const socket = io("https://trivia-oepz.onrender.com");
 
-const Button = ({ children, ...props }) => (
-  <button className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50" {...props}>
+const Button = ({ children, className = "", ...props }) => (
+  <button
+    className={`bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50 ${className}`}
+    {...props}
+  >
     {children}
   </button>
 );
@@ -142,7 +145,4 @@ export default function TriviaGame() {
       </div>
     </div>
   );
-}
-    }
-  ]
 }
