@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
-import Confetti from "react-confetti";
 
 const socket = io("https://trivia-oepz.onrender.com");
 
@@ -30,7 +29,6 @@ export default function TriviaGame() {
   const [questionTimer, setQuestionTimer] = useState(15);
   const [name, setName] = useState("");
   const [submittedName, setSubmittedName] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
 
   const isAnswerCorrectRef = useRef(null);
   const clickSound = useRef(new Audio("/sounds/click.mp3"));
@@ -56,7 +54,6 @@ export default function TriviaGame() {
       setAnswers({});
       setShowCorrect(false);
       setCountdown(null);
-      setShowConfetti(false);
       setQuestionTimer(15);
 
       clearInterval(timerRef.current);
@@ -85,7 +82,6 @@ export default function TriviaGame() {
       if (selectedAnswer !== null && selectedAnswer !== "Timed out") {
         if (isAnswerCorrectRef.current) {
           correctSound.current.play();
-          setShowConfetti(true);
         } else {
           wrongSound.current.play();
         }
@@ -147,7 +143,6 @@ export default function TriviaGame() {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 relative overflow-hidden">
-      {showConfetti && <Confetti recycle={false} numberOfPieces={300} />}
       <div className="p-6 max-w-2xl w-full text-center">
         <h1 className="text-3xl font-extrabold mb-6 text-indigo-700">Multiplayer Trivia Game</h1>
         <Card>
