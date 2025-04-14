@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
+import Confetti from "react-confetti";
 
 const socket = io("https://trivia-oepz.onrender.com");
 
@@ -26,13 +27,16 @@ export default function TriviaGame() {
   const [answers, setAnswers] = useState({});
   const [showCorrect, setShowCorrect] = useState(false);
   const [countdown, setCountdown] = useState(null);
+  const [questionTimer, setQuestionTimer] = useState(15);
   const [name, setName] = useState("");
   const [submittedName, setSubmittedName] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const isAnswerCorrectRef = useRef(null);
   const clickSound = useRef(new Audio("/sounds/click.mp3"));
   const correctSound = useRef(new Audio("/sounds/correct.mp3"));
   const wrongSound = useRef(new Audio("/sounds/wrong.mp3"));
+  const timerRef = useRef(null);
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -52,6 +56,23 @@ export default function TriviaGame() {
       setAnswers({});
       setShowCorrect(false);
       setCountdown(null);
+      setShowConfetti(false);
+      setQuestionTimer(15);
+
+      clearInterval(timerRef.current);
+      timerRef.current = setInterval(() => {
+        setQuestionTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current);
+            if (!selectedAnswer) {
+              setSelectedAnswer("Timed out");
+              socket.emit("submitAnswer", { answer: null });
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     });
 
     socket.on("answerSubmitted", (data) => {
@@ -60,9 +81,11 @@ export default function TriviaGame() {
 
     socket.on("showCorrectAnswer", () => {
       setShowCorrect(true);
-      if (selectedAnswer !== null) {
+      clearInterval(timerRef.current);
+      if (selectedAnswer !== null && selectedAnswer !== "Timed out") {
         if (isAnswerCorrectRef.current) {
           correctSound.current.play();
+          setShowConfetti(true);
         } else {
           wrongSound.current.play();
         }
@@ -82,6 +105,7 @@ export default function TriviaGame() {
       socket.off("answerSubmitted");
       socket.off("showCorrectAnswer");
       socket.off("countdown");
+      clearInterval(timerRef.current);
     };
   }, [selectedAnswer]);
 
@@ -98,6 +122,7 @@ export default function TriviaGame() {
       setSelectedAnswer(option);
       isAnswerCorrectRef.current = option === question.answer;
       socket.emit("submitAnswer", { answer: option });
+      clearInterval(timerRef.current);
     }
   };
 
@@ -121,12 +146,14 @@ export default function TriviaGame() {
   if (!question) return <div className="text-center mt-10 text-lg">Loading question...</div>;
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 relative overflow-hidden">
+      {showConfetti && <Confetti recycle={false} numberOfPieces={300} />}
       <div className="p-6 max-w-2xl w-full text-center">
         <h1 className="text-3xl font-extrabold mb-6 text-indigo-700">Multiplayer Trivia Game</h1>
         <Card>
           <CardContent>
-            <p className="text-xl font-semibold mb-6 text-gray-800">{question.question}</p>
+            <p className="text-xl font-semibold mb-2 text-gray-800">{question.question}</p>
+            <p className="text-sm text-gray-500 mb-6">⏳ Time left: {questionTimer}s</p>
             <div className="grid grid-cols-2 gap-4">
               {question.options.map((option) => {
                 const highlight = showCorrect && option === question.answer ? "bg-green-600" : "";
