@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
-const socket = io("https://trivia-oepz.onrender.com"); // Updated to your actual deployed backend URL
+const socket = io("https://trivia-oepz.onrender.com");
 
 const Button = ({ children, ...props }) => (
   <button className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50" {...props}>
@@ -23,10 +23,15 @@ export default function TriviaGame() {
   const [answers, setAnswers] = useState({});
   const [showCorrect, setShowCorrect] = useState(false);
   const [countdown, setCountdown] = useState(null);
+  const [name, setName] = useState("");
+  const [submittedName, setSubmittedName] = useState(false);
 
   useEffect(() => {
+    if (!submittedName) return;
+
     socket.on("connect", () => {
       console.log("✅ Connected to backend");
+      socket.emit("join", name);
       socket.emit("getQuestion");
     });
 
@@ -65,7 +70,7 @@ export default function TriviaGame() {
         return updated;
       });
     });
-  }, [players.length]);
+  }, [players.length, submittedName]);
 
   const submitAnswer = (option) => {
     if (!selectedAnswer) {
@@ -74,6 +79,21 @@ export default function TriviaGame() {
     }
   };
 
+  if (!submittedName) {
+    return (
+      <div className="p-4 max-w-xl mx-auto text-center">
+        <h1 className="text-2xl font-bold mb-4">Enter Your Name</h1>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="border px-4 py-2 rounded mb-2 w-full"
+        />
+        <Button onClick={() => name && setSubmittedName(true)}>Start Game</Button>
+      </div>
+    );
+  }
+
   if (!question) return <div className="text-center mt-10">Loading question...</div>;
 
   return (
@@ -81,9 +101,7 @@ export default function TriviaGame() {
       <h1 className="text-2xl font-bold mb-4">Multiplayer Trivia Game</h1>
       <Card className="mb-4">
         <CardContent>
-          <p className="text-lg font-semibold mb-2">
-            {question.question}
-          </p>
+          <p className="text-lg font-semibold mb-2">{question.question}</p>
           <div className="grid grid-cols-2 gap-2">
             {question.options.map((option) => (
               <Button
@@ -104,7 +122,9 @@ export default function TriviaGame() {
             </p>
           )}
           {countdown !== null && (
-            <p className="mt-2 text-sm text-gray-500">Next question in {countdown}...</p>
+            <p className="mt-2 text-sm text-gray-500">
+              Next question in {countdown}...
+            </p>
           )}
         </CardContent>
       </Card>
@@ -112,13 +132,16 @@ export default function TriviaGame() {
         <h2 className="font-bold text-lg">Players</h2>
         <ul>
           {players.map((player) => (
-            <li key={player}>
-              {player} - {scores[player] || 0} points
-              {answers[player] && ` (answered)`}
+            <li key={player.id}>
+              {player.name} - {scores[player.id] || 0} points
+              {answers[player.id] && ` (answered)`}
             </li>
           ))}
         </ul>
       </div>
     </div>
   );
+}
+    }
+  ]
 }
