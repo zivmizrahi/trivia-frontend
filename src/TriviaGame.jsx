@@ -1,9 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { io } from "socket.io-client";
 
 const socket = io("https://trivia-oepz.onrender.com"); // Updated to your actual deployed backend URL
+
+const Button = ({ children, ...props }) => (
+  <button className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50" {...props}>
+    {children}
+  </button>
+);
+
+const Card = ({ children }) => (
+  <div className="bg-white rounded shadow p-4 mb-4">{children}</div>
+);
+
+const CardContent = ({ children }) => <div>{children}</div>;
 
 export default function TriviaGame() {
   const [players, setPlayers] = useState([]);
