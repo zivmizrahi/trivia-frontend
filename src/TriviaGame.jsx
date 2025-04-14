@@ -49,27 +49,17 @@ export default function TriviaGame() {
     });
 
     socket.on("answerSubmitted", (data) => {
-      setAnswers((prev) => {
-        const updated = { ...prev, [data.player]: data.answer };
-        if (Object.keys(updated).length === players.length) {
-          setShowCorrect(true);
-          let seconds = 3;
-          setCountdown(seconds);
-          const interval = setInterval(() => {
-            seconds -= 1;
-            if (seconds === 0) {
-              clearInterval(interval);
-              setCountdown(null);
-              socket.emit("getQuestion");
-            } else {
-              setCountdown(seconds);
-            }
-          }, 1000);
-        }
-        return updated;
-      });
+      setAnswers((prev) => ({ ...prev, [data.player]: data.answer }));
     });
-  }, [players.length]);
+
+    socket.on("showCorrectAnswer", () => {
+      setShowCorrect(true);
+    });
+
+    socket.on("countdown", (time) => {
+      setCountdown(time);
+    });
+  }, []);
 
   useEffect(() => {
     if (submittedName) {
