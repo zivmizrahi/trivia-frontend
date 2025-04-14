@@ -1,11 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 
 const socket = io("https://trivia-oepz.onrender.com");
-
-const clickSound = new Audio("/sounds/click.mp3");
-const correctSound = new Audio("/sounds/correct.mp3");
-const wrongSound = new Audio("/sounds/wrong.mp3");
 
 const Button = ({ children, className = "", ...props }) => (
   <button
@@ -26,13 +22,17 @@ export default function TriviaGame() {
   const [players, setPlayers] = useState([]);
   const [question, setQuestion] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [isAnswerCorrect, setIsAnswerCorrect] = useState(null);
   const [scores, setScores] = useState({});
   const [answers, setAnswers] = useState({});
   const [showCorrect, setShowCorrect] = useState(false);
   const [countdown, setCountdown] = useState(null);
   const [name, setName] = useState("");
   const [submittedName, setSubmittedName] = useState(false);
+
+  const isAnswerCorrectRef = useRef(null);
+  const clickSound = useRef(new Audio("/sounds/click.mp3"));
+  const correctSound = useRef(new Audio("/sounds/correct.mp3"));
+  const wrongSound = useRef(new Audio("/sounds/wrong.mp3"));
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -48,7 +48,7 @@ export default function TriviaGame() {
     socket.on("newQuestion", (newQ) => {
       setQuestion(newQ);
       setSelectedAnswer(null);
-      setIsAnswerCorrect(null);
+      isAnswerCorrectRef.current = null;
       setAnswers({});
       setShowCorrect(false);
       setCountdown(null);
@@ -60,11 +60,11 @@ export default function TriviaGame() {
 
     socket.on("showCorrectAnswer", () => {
       setShowCorrect(true);
-      if (selectedAnswer) {
-        if (isAnswerCorrect) {
-          correctSound.play();
+      if (selectedAnswer !== null) {
+        if (isAnswerCorrectRef.current) {
+          correctSound.current.play();
         } else {
-          wrongSound.play();
+          wrongSound.current.play();
         }
       }
     });
@@ -72,7 +72,18 @@ export default function TriviaGame() {
     socket.on("countdown", (time) => {
       setCountdown(time);
     });
-  }, [selectedAnswer, isAnswerCorrect]);
+
+    return () => {
+      socket.off("connect");
+      socket.off("connect_error");
+      socket.off("players");
+      socket.off("scores");
+      socket.off("newQuestion");
+      socket.off("answerSubmitted");
+      socket.off("showCorrectAnswer");
+      socket.off("countdown");
+    };
+  }, [selectedAnswer]);
 
   useEffect(() => {
     if (submittedName) {
@@ -83,9 +94,9 @@ export default function TriviaGame() {
 
   const submitAnswer = (option) => {
     if (!selectedAnswer) {
-      clickSound.play();
+      clickSound.current.play();
       setSelectedAnswer(option);
-      setIsAnswerCorrect(option === question.answer);
+      isAnswerCorrectRef.current = option === question.answer;
       socket.emit("submitAnswer", { answer: option });
     }
   };
