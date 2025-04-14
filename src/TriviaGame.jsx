@@ -19,9 +19,125 @@ const Card = ({ children }) => (
 const CardContent = ({ children }) => <div className="w-full">{children}</div>;
 
 export default function TriviaGame() {
-  // ... no changes in logic/code above this point
+  const [players, setPlayers] = useState([]);
+  const [question, setQuestion] = useState(null);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [scores, setScores] = useState({});
+  const [answers, setAnswers] = useState({});
+  const [showCorrect, setShowCorrect] = useState(false);
+  const [countdown, setCountdown] = useState(null);
+  const [questionTimer, setQuestionTimer] = useState(15);
+  const [name, setName] = useState("");
+  const [submittedName, setSubmittedName] = useState(false);
+  const [newQuestionTrigger, setNewQuestionTrigger] = useState(0);
+
+  const isAnswerCorrectRef = useRef(null);
+  const clickSound = useRef(new Audio("/sounds/click.mp3"));
+  const correctSound = useRef(new Audio("/sounds/correct.mp3"));
+  const wrongSound = useRef(new Audio("/sounds/wrong.mp3"));
+  const timerRef = useRef(null);
+
+  const startQuestionTimer = () => {
+    clearInterval(timerRef.current);
+    setQuestionTimer(15);
+    timerRef.current = setInterval(() => {
+      setQuestionTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          if (!selectedAnswer) {
+            setSelectedAnswer("Timed out");
+            socket.emit("submitAnswer", { answer: null });
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  useEffect(() => {
+    startQuestionTimer();
+  }, [newQuestionTrigger]);
+
+  useEffect(() => {
+    socket.on("connect", () => console.log("✅ Connected"));
+    socket.on("players", setPlayers);
+    socket.on("scores", setScores);
+
+    socket.on("newQuestion", (newQ) => {
+      setQuestion(newQ);
+      setSelectedAnswer(null);
+      isAnswerCorrectRef.current = null;
+      setAnswers({});
+      setShowCorrect(false);
+      setCountdown(null);
+      setNewQuestionTrigger((prev) => prev + 1);
+    });
+
+    socket.on("answerSubmitted", (data) => {
+      setAnswers((prev) => ({ ...prev, [data.player]: data.answer }));
+    });
+
+    socket.on("showCorrectAnswer", () => {
+      setShowCorrect(true);
+      clearInterval(timerRef.current);
+      if (selectedAnswer && selectedAnswer !== "Timed out") {
+        if (isAnswerCorrectRef.current) correctSound.current.play();
+        else wrongSound.current.play();
+      }
+    });
+
+    socket.on("countdown", setCountdown);
+
+    return () => {
+      socket.off("connect");
+      socket.off("players");
+      socket.off("scores");
+      socket.off("newQuestion");
+      socket.off("answerSubmitted");
+      socket.off("showCorrectAnswer");
+      socket.off("countdown");
+      clearInterval(timerRef.current);
+    };
+  }, [selectedAnswer]);
+
+  useEffect(() => {
+    if (submittedName) {
+      socket.emit("join", name);
+      setTimeout(() => socket.emit("getQuestion"), 100);
+    }
+  }, [submittedName, name]);
+
+  const submitAnswer = (option) => {
+    if (!selectedAnswer) {
+      clickSound.current.play();
+      setSelectedAnswer(option);
+      isAnswerCorrectRef.current = option === question.answer;
+      socket.emit("submitAnswer", { answer: option });
+      clearInterval(timerRef.current);
+    }
+  };
 
   const progressPercentage = (questionTimer / 15) * 100;
+
+  if (!submittedName) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="p-4 max-w-xl w-full text-center">
+          <h1 className="text-3xl font-extrabold mb-4 text-blue-700">Enter Your Name</h1>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="border border-blue-300 px-4 py-3 rounded-xl mb-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <Button onClick={() => name && setSubmittedName(true)}>Start Game</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!question) return <div className="text-center mt-10 text-lg">Loading question...</div>;
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 relative overflow-hidden">
