@@ -30,12 +30,8 @@ export default function TriviaGame() {
   const [submittedName, setSubmittedName] = useState(false);
 
   useEffect(() => {
-    if (!submittedName) return;
-
     socket.on("connect", () => {
       console.log("✅ Connected to backend");
-      socket.emit("join", name);
-      setTimeout(() => socket.emit("getQuestion"), 100);
     });
 
     socket.on("connect_error", (err) => {
@@ -73,7 +69,14 @@ export default function TriviaGame() {
         return updated;
       });
     });
-  }, [players.length, submittedName]);
+  }, [players.length]);
+
+  useEffect(() => {
+    if (submittedName) {
+      socket.emit("join", name);
+      setTimeout(() => socket.emit("getQuestion"), 100);
+    }
+  }, [submittedName, name]);
 
   const submitAnswer = (option) => {
     if (!selectedAnswer) {
