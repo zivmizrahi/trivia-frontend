@@ -26,6 +26,7 @@ export default function TriviaGame() {
   const [players, setPlayers] = useState([]);
   const [question, setQuestion] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [isAnswerCorrect, setIsAnswerCorrect] = useState(null);
   const [scores, setScores] = useState({});
   const [answers, setAnswers] = useState({});
   const [showCorrect, setShowCorrect] = useState(false);
@@ -47,6 +48,7 @@ export default function TriviaGame() {
     socket.on("newQuestion", (newQ) => {
       setQuestion(newQ);
       setSelectedAnswer(null);
+      setIsAnswerCorrect(null);
       setAnswers({});
       setShowCorrect(false);
       setCountdown(null);
@@ -58,9 +60,8 @@ export default function TriviaGame() {
 
     socket.on("showCorrectAnswer", () => {
       setShowCorrect(true);
-
       if (selectedAnswer) {
-        if (selectedAnswer === question.answer) {
+        if (isAnswerCorrect) {
           correctSound.play();
         } else {
           wrongSound.play();
@@ -71,7 +72,7 @@ export default function TriviaGame() {
     socket.on("countdown", (time) => {
       setCountdown(time);
     });
-  }, [selectedAnswer, question]);
+  }, [selectedAnswer, isAnswerCorrect]);
 
   useEffect(() => {
     if (submittedName) {
@@ -84,6 +85,7 @@ export default function TriviaGame() {
     if (!selectedAnswer) {
       clickSound.play();
       setSelectedAnswer(option);
+      setIsAnswerCorrect(option === question.answer);
       socket.emit("submitAnswer", { answer: option });
     }
   };
