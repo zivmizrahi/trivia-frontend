@@ -13,7 +13,7 @@ const Button = ({ children, className = "", ...props }) => (
 );
 
 const Card = ({ children }) => (
-  <div className="bg-white rounded-2xl shadow-lg p-8 mb-6 border border-gray-200 flex flex-col items-center text-center">{children}</div>
+  <div className="bg-white rounded-2xl shadow-lg p-8 mb-6 border border-gray-200 flex flex-col items-center text-center w-full max-w-2xl">{children}</div>
 );
 
 const CardContent = ({ children }) => <div className="w-full">{children}</div>;
@@ -140,57 +140,55 @@ export default function TriviaGame() {
   if (!question) return <div className="text-center mt-10 text-lg">Loading question...</div>;
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 relative overflow-hidden">
-      <div className="p-6 max-w-3xl w-full text-center">
-        <h1 className="text-4xl font-extrabold mb-6 text-indigo-700">Multiplayer Trivia Game</h1>
-        <Card>
-          <CardContent>
-            <p className="text-2xl font-semibold mb-4 text-gray-800">{question.question}</p>
-            <p className="text-base text-gray-500 mb-2">⏳ Time left: {questionTimer}s</p>
-            <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden mb-6">
-              <div
-                className="h-full bg-indigo-500 transition-all duration-500 ease-linear"
-                style={{ width: `${progressPercentage}%` }}
-              ></div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 justify-center">
-              {question.options.map((option) => {
-                const highlight = showCorrect && option === question.answer ? "bg-green-600" : "";
-                return (
-                  <Button
-                    key={option}
-                    onClick={() => submitAnswer(option)}
-                    disabled={!!selectedAnswer}
-                    className={highlight}
-                  >
-                    {option}
-                  </Button>
-                );
-              })}
-            </div>
-            {showCorrect && (
-              <p className="mt-8 text-green-700 font-bold text-xl">
-                ✅ Correct Answer: {question.answer}
-              </p>
-            )}
-            {countdown !== null && (
-              <p className="mt-4 text-base text-indigo-600">
-                Next question in {countdown}...
-              </p>
-            )}
-          </CardContent>
-        </Card>
-        <div className="mb-6">
-          <h2 className="font-bold text-2xl text-blue-800 mb-2">Players</h2>
-          <ul className="space-y-2">
-            {players.map((player) => (
-              <li key={player.id} className="text-lg text-gray-700">
-                {player.name} - {scores[player.id] || 0} points
-                {answers[player.id] && ` (answered)`}
-              </li>
-            ))}
-          </ul>
-        </div>
+    <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 text-center px-4">
+      <h1 className="text-4xl font-extrabold mb-6 text-indigo-700">Multiplayer Trivia Game</h1>
+      <Card>
+        <CardContent>
+          <p className="text-2xl font-semibold mb-4 text-gray-800">{question.question}</p>
+          <p className="text-base text-gray-500 mb-2">⏳ Time left: {questionTimer}s</p>
+          <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden mb-6">
+            <div
+              className="h-full bg-indigo-500 transition-all duration-500 ease-linear"
+              style={{ width: `${progressPercentage}%` }}
+            ></div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 justify-center">
+            {question.options.map((option) => {
+              const highlight = showCorrect && option === question.answer ? "bg-green-600" : "";
+              return (
+                <Button
+                  key={option}
+                  onClick={() => submitAnswer(option)}
+                  disabled={!!selectedAnswer}
+                  className={highlight}
+                >
+                  {option}
+                </Button>
+              );
+            })}
+          </div>
+          {showCorrect && (
+            <p className="mt-8 text-green-700 font-bold text-xl">
+              ✅ Correct Answer: {question.answer}
+            </p>
+          )}
+          {countdown !== null && (
+            <p className="mt-4 text-base text-indigo-600">
+              Next question in {countdown}...
+            </p>
+          )}
+        </CardContent>
+      </Card>
+      <div className="mb-6 w-full max-w-2xl">
+        <h2 className="font-bold text-2xl text-blue-800 mb-2">Players</h2>
+        <ul className="space-y-2">
+          {players.map((player) => (
+            <li key={player.id} className="text-lg text-gray-700">
+              {player.name} - {scores[player.id] || 0} points
+              {answers[player.id] && ` (answered)`}
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
