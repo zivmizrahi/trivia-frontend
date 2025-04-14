@@ -35,7 +35,7 @@ export default function TriviaGame() {
     socket.on("connect", () => {
       console.log("✅ Connected to backend");
       socket.emit("join", name);
-      socket.emit("getQuestion");
+      setTimeout(() => socket.emit("getQuestion"), 100);
     });
 
     socket.on("connect_error", (err) => {
