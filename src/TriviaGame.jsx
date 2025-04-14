@@ -36,6 +36,24 @@ export default function TriviaGame() {
   const wrongSound = useRef(new Audio("/sounds/wrong.mp3"));
   const timerRef = useRef(null);
 
+  const startQuestionTimer = () => {
+    clearInterval(timerRef.current);
+    setQuestionTimer(15);
+    timerRef.current = setInterval(() => {
+      setQuestionTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          if (!selectedAnswer) {
+            setSelectedAnswer("Timed out");
+            socket.emit("submitAnswer", { answer: null });
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   useEffect(() => {
     socket.on("connect", () => {
       console.log("✅ Connected to backend");
@@ -54,22 +72,7 @@ export default function TriviaGame() {
       setAnswers({});
       setShowCorrect(false);
       setCountdown(null);
-      setQuestionTimer(15);
-
-      clearInterval(timerRef.current);
-      timerRef.current = setInterval(() => {
-        setQuestionTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(timerRef.current);
-            if (!selectedAnswer) {
-              setSelectedAnswer("Timed out");
-              socket.emit("submitAnswer", { answer: null });
-            }
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      startQuestionTimer();
     });
 
     socket.on("answerSubmitted", (data) => {
@@ -141,6 +144,8 @@ export default function TriviaGame() {
 
   if (!question) return <div className="text-center mt-10 text-lg">Loading question...</div>;
 
+  const progressPercentage = (questionTimer / 15) * 100;
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 relative overflow-hidden">
       <div className="p-6 max-w-2xl w-full text-center">
@@ -148,7 +153,13 @@ export default function TriviaGame() {
         <Card>
           <CardContent>
             <p className="text-xl font-semibold mb-2 text-gray-800">{question.question}</p>
-            <p className="text-sm text-gray-500 mb-6">⏳ Time left: {questionTimer}s</p>
+            <p className="text-sm text-gray-500 mb-2">⏳ Time left: {questionTimer}s</p>
+            <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden mb-4">
+              <div
+                className="h-full bg-indigo-500 transition-all duration-500 ease-linear"
+                style={{ width: `${progressPercentage}%` }}
+              ></div>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               {question.options.map((option) => {
                 const highlight = showCorrect && option === question.answer ? "bg-green-600" : "";
