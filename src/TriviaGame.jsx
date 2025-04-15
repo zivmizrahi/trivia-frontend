@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
-import "https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap";
 
 const socket = io("https://trivia-oepz.onrender.com");
 
@@ -143,7 +142,7 @@ export default function TriviaGame() {
   if (!question) return <div className="text-center mt-10 text-lg text-purple-700">Loading question...</div>;
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-indigo-600 via-purple-500 to-pink-500 px-4 text-center text-gray-800 font-[Fredoka]">
+    <div className="flex flex-col justify-center items-center min-h-screen bg-gradient-to-br from-indigo-600 via-purple-500 to-pink-500 px-4 text-center text-gray-800 font-['Fredoka']">
       <h1 className="text-6xl font-extrabold mb-10 text-white drop-shadow-md tracking-wide animate-fadeInSlow">🎉 Trivia Challenge</h1>
       <Card>
         <CardContent>
